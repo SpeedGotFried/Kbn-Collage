@@ -1,0 +1,438 @@
+/* Futuristic 3D Messaging App Design System */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@layer base {
+  :root {
+    /* Futuristic Off-White/Beige Theme */
+    --background: 44 20% 97%; /* #FDF9F5 - Warm off-white */
+    --foreground: 35 20% 20%; /* #3D352B - Dark brown */
+
+    --card: 42 25% 95%; /* #F5F0E8 - Light beige */
+    --card-foreground: 35 20% 20%;
+
+    --popover: 44 20% 97%;
+    --popover-foreground: 35 20% 20%;
+
+    --primary: 42 35% 65%; /* #D4C2A0 - Warm beige */
+    --primary-foreground: 44 20% 97%;
+
+    --secondary: 40 20% 90%; /* #E8DCC0 - Light brown */
+    --secondary-foreground: 35 20% 20%;
+
+    --muted: 40 15% 92%; /* #EFEAE0 */
+    --muted-foreground: 35 15% 45%;
+
+    --accent: 45 25% 85%; /* #E6D9C5 - Cream */
+    --accent-foreground: 35 20% 20%;
+
+    --destructive: 0 70% 60%;
+    --destructive-foreground: 44 20% 97%;
+
+    --border: 40 15% 88%; /* #E3DDD3 */
+    --input: 40 15% 90%;
+    --ring: 42 35% 65%;
+
+    --radius: 1rem;
+
+    /* 3D Glass Effects */
+    --glass-bg: 44 20% 97% / 0.1;
+    --glass-border: 40 15% 88% / 0.2;
+    --glass-shadow: 0 8px 32px rgba(139, 121, 94, 0.15);
+    --glass-backdrop: blur(10px);
+
+    /* Quantum Avatar Colors */
+    --quantum-online: 200 100% 70%; /* Neon Blue */
+    --quantum-typing: 120 100% 50%; /* Green */
+    --quantum-offline: 270 60% 50%; /* Purple */
+    --quantum-dnd: 0 80% 60%; /* Red */
+
+    /* Mood Reactive Backgrounds */
+    --mood-happy: 55 100% 85%; /* Yellow glow */
+    --mood-sad: 220 50% 85%; /* Blue gradient */
+    --mood-angry: 0 60% 85%; /* Red pulse */
+    --mood-excited: 280 60% 85%; /* Rainbow wave */
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(42 35% 75%), hsl(40 30% 65%));
+    --gradient-glass: linear-gradient(135deg, hsl(44 20% 97% / 0.1), hsl(40 15% 88% / 0.05));
+    --gradient-quantum: linear-gradient(45deg, hsl(200 100% 70%), hsl(280 60% 70%));
+    --gradient-teleport: linear-gradient(90deg, hsl(200 100% 70%), hsl(280 60% 70%), hsl(55 100% 70%));
+
+    /* Animations */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --transition-teleport: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    /* Shadows */
+    --shadow-glass: 0 8px 32px rgba(139, 121, 94, 0.15), 0 4px 16px rgba(139, 121, 94, 0.1);
+    --shadow-glow: 0 0 30px hsl(var(--primary) / 0.3);
+    --shadow-quantum: 0 0 40px hsl(var(--quantum-online) / 0.4);
+    --shadow-teleport: 0 0 50px hsl(200 100% 70% / 0.6);
+
+    /* Sidebar */
+    --sidebar-background: 42 25% 95%;
+    --sidebar-foreground: 35 20% 20%;
+    --sidebar-primary: 42 35% 65%;
+    --sidebar-primary-foreground: 44 20% 97%;
+    --sidebar-accent: 40 20% 90%;
+    --sidebar-accent-foreground: 35 20% 20%;
+    --sidebar-border: 40 15% 88%;
+    --sidebar-ring: 42 35% 65%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  /* Glass Morphism Effects */
+  .glass-panel {
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.2);
+    border-radius: 1rem;
+    background: hsl(var(--glass-bg));
+    box-shadow: var(--shadow-glass);
+    border: 1px solid hsl(var(--glass-border));
+  }
+
+  .glass-button {
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.2);
+    border-radius: 1rem;
+    background: hsl(var(--glass-bg));
+    box-shadow: var(--shadow-glass);
+    border: 1px solid hsl(var(--glass-border));
+    transition: all 0.3s ease;
+    background: var(--gradient-glass);
+  }
+  
+  .glass-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 40px hsl(var(--primary) / 0.6);
+  }
+
+  /* Quantum Avatar Effects */
+  .quantum-avatar {
+    position: relative;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--gradient-quantum);
+    box-shadow: var(--shadow-quantum);
+  }
+
+  .quantum-avatar.online {
+    box-shadow: 0 0 40px hsl(var(--quantum-online) / 0.6);
+  }
+
+  .quantum-avatar.typing {
+    animation: typing-pulse 1s ease-in-out infinite;
+    box-shadow: 0 0 40px hsl(var(--quantum-typing) / 0.6);
+  }
+
+  .quantum-avatar.offline {
+    box-shadow: 0 0 20px hsl(var(--quantum-offline) / 0.4);
+    opacity: 0.7;
+  }
+
+  .quantum-avatar.dnd {
+    animation: dnd-pulse 2s ease-in-out infinite;
+    box-shadow: 0 0 30px hsl(var(--quantum-dnd) / 0.5);
+  }
+
+  /* Chat Bubble 3D Effects */
+  .chat-bubble {
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.2);
+    border-radius: 1rem;
+    background: hsl(var(--glass-bg));
+    box-shadow: var(--shadow-glass);
+    border: 1px solid hsl(var(--glass-border));
+    position: relative;
+    transform: translateZ(0);
+    transition: all 0.3s ease;
+    transform-style: preserve-3d;
+  }
+
+  .chat-bubble:hover {
+    transform: translateZ(10px) rotateX(5deg);
+  }
+
+  .chat-bubble.sent {
+    margin-left: auto;
+    background: var(--gradient-primary);
+  }
+
+  .chat-bubble.received {
+    background: hsl(var(--card));
+  }
+
+  /* Teleport Animation */
+  .teleport-orb {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--gradient-teleport);
+    box-shadow: var(--shadow-teleport);
+    animation: teleport-fly 0.8s ease-out forwards;
+  }
+
+  /* File Cube Effects */
+  .file-cube {
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.2);
+    border-radius: 1rem;
+    background: hsl(var(--glass-bg));
+    box-shadow: var(--shadow-glass);
+    border: 1px solid hsl(var(--glass-border));
+    position: relative;
+    cursor: pointer;
+    transform: translateZ(0);
+    transition: all 0.5s ease;
+    transform-style: preserve-3d;
+  }
+
+  .file-cube:hover {
+    transform: rotateX(15deg) rotateY(15deg) scale(1.05);
+  }
+
+  .file-cube.unfolding {
+    animation: cube-unfold 1s ease-out forwards;
+  }
+
+  /* Mood Reactive Backgrounds */
+  .mood-happy {
+    background: radial-gradient(circle, hsl(var(--mood-happy)) 0%, transparent 70%);
+  }
+
+  .mood-sad {
+    background: linear-gradient(135deg, hsl(var(--mood-sad)) 0%, transparent 70%);
+  }
+
+  .mood-angry {
+    background: radial-gradient(circle, hsl(var(--mood-angry)) 0%, transparent 70%);
+    animation: angry-pulse 1.5s ease-in-out infinite;
+  }
+
+  .mood-excited {
+    background: conic-gradient(from 0deg, hsl(var(--mood-excited)), hsl(280 60% 85%), hsl(55 100% 85%), hsl(var(--mood-excited)));
+    animation: excited-wave 2s ease-in-out infinite;
+  }
+
+  /* 3D Background Elements */
+  .floating-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+  }
+}
+
+@layer utilities {
+  /* Custom Animations */
+  @keyframes typing-pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 40px hsl(var(--quantum-typing) / 0.6); }
+    50% { transform: scale(1.1); box-shadow: 0 0 60px hsl(var(--quantum-typing) / 0.8); }
+  }
+
+  @keyframes dnd-pulse {
+    0%, 100% { box-shadow: 0 0 30px hsl(var(--quantum-dnd) / 0.5); }
+    50% { box-shadow: 0 0 50px hsl(var(--quantum-dnd) / 0.7); }
+  }
+
+  @keyframes teleport-fly {
+    0% { 
+      transform: scale(1) translateX(0) translateY(0);
+      opacity: 1;
+    }
+    50% { 
+      transform: scale(0.3) translateX(200px) translateY(-100px);
+      opacity: 0.8;
+      box-shadow: 0 0 80px hsl(200 100% 70% / 0.8);
+    }
+    100% { 
+      transform: scale(0.1) translateX(400px) translateY(0);
+      opacity: 0;
+    }
+  }
+
+  @keyframes cube-unfold {
+    0% { transform: rotateX(0deg) rotateY(0deg); }
+    25% { transform: rotateX(90deg) rotateY(45deg); }
+    50% { transform: rotateX(180deg) rotateY(90deg); }
+    75% { transform: rotateX(270deg) rotateY(135deg); }
+    100% { transform: rotateX(360deg) rotateY(180deg) scale(1.2); }
+  }
+
+  @keyframes angry-pulse {
+    0%, 100% { background-color: hsl(var(--mood-angry) / 0.3); }
+    50% { background-color: hsl(var(--mood-angry) / 0.6); }
+  }
+
+  @keyframes excited-wave {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.3); }
+    50% { box-shadow: 0 0 40px hsl(var(--primary) / 0.6); }
+  }
+
+  @keyframes unlock {
+    0% { transform: scale(1) rotate(0deg); opacity: 1; }
+    50% { transform: scale(1.2) rotate(180deg); opacity: 0.5; }
+    100% { transform: scale(0) rotate(360deg); opacity: 0; }
+  }
+
+  /* Utility Classes */
+  .hover-lift {
+    transition: transform 0.3s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: scale(1.05) translateY(-0.25rem);
+  }
+
+  .hover-glow {
+    transition: all 0.3s ease;
+  }
+  
+  .hover-glow:hover {
+    box-shadow: 0 0 40px hsl(var(--primary) / 0.6);
+  }
+
+  .shadow-glow {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 10px 25px -5px hsl(var(--primary) / 0.3);
+  }
+
+  .text-gradient {
+    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--secondary)));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .bg-gradient-primary {
+    background: linear-gradient(to bottom right, hsl(var(--primary) / 0.2), hsl(var(--secondary) / 0.2));
+  }
+
+  .bg-gradient-glass {
+    background: linear-gradient(to bottom right, hsl(var(--background) / 0.8), hsl(var(--background) / 0.4));
+  }
+
+  .font-inter {
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Shake animation for wrong password */
+  .shake {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
+  /* Custom Scrollbar Styles */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.6), hsl(var(--secondary) / 0.4));
+    border-radius: 10px;
+    border: 2px solid hsl(var(--background));
+    backdrop-filter: blur(10px);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.8), hsl(var(--secondary) / 0.6));
+    box-shadow: 0 0 10px hsl(var(--primary) / 0.4);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: hsl(var(--background));
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.6) hsl(var(--background));
+  }
+}
