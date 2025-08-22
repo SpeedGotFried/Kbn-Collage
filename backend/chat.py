@@ -79,27 +79,19 @@ async def send_message(from_user_id: str, to_user_id: str, content: str) -> Mess
     sender_id = from_user.data[0]["id"]
     receiver_id = to_user.data[0]["id"]
 
-    # Get recipient's public key
-    to_public_key = await auth.get_user_public_key(to_user_id)
+    # Use E2E encryption with timestamp as salt
+    timestamp = datetime.utcnow().isoformat()
+    encrypted_payload = crypto.encrypt_message(content, timestamp)
+    
+    if not encrypted_payload:
+        raise HTTPException(status_code=500, detail="Failed to encrypt message")
 
-    # Encrypt message using hybrid PQC + AES if key exists
-    if to_public_key:
-        encrypted_payload = crypto.hybrid_encrypt(to_public_key, content.encode("utf-8"))
-    else:
-        # Fallback: store as base64 plaintext envelope for development when key is missing
-        # DO NOT USE IN PRODUCTION
-        print("[WARN] Recipient public key not found. Storing message in plaintext envelope for development.")
-        encrypted_payload = {
-            "scheme": "PLAINTEXT_DEV",
-            "content_b64": base64.b64encode(content.encode("utf-8")).decode("ascii"),
-        }
-
-    # Store encrypted message with JSONB format
+    # Store encrypted message
     message_data = {
         "sender_id": sender_id,
         "receiver_id": receiver_id,
-        "encrypted_content": encrypted_payload,  # Direct dict for JSONB
-        "created_at": datetime.utcnow().isoformat(),
+        "encrypted_content": encrypted_payload,
+        "created_at": timestamp,
     }
 
     res = supabase.table("messages").insert(message_data).execute()
@@ -159,11 +151,31 @@ async def get_messages(user_id: str, friend_id: str) -> List[MessageResponse]:
 
     messages = []
     for msg in combined or []:
+        # Decrypt the message content
+        decrypted_content = None
+        if msg.get("encrypted_content") and isinstance(msg["encrypted_content"], dict):
+            encrypted_payload = msg["encrypted_content"]
+            if encrypted_payload.get("scheme") == "E2E_AES_CBC":
+                decrypted_content = crypto.decrypt_message(encrypted_payload, msg["created_at"])
+            elif encrypted_payload.get("scheme") == "PLAINTEXT_DEV" and encrypted_payload.get("content_b64"):
+                # Fallback for old plaintext messages
+                try:
+                    decrypted_content = base64.b64decode(encrypted_payload["content_b64"]).decode("utf-8")
+                except:
+                    decrypted_content = "Failed to decode message"
+        
+        if decrypted_content is None:
+            decrypted_content = "Failed to decrypt message"
+        
+        # Create message response with proper sender mapping
         messages.append(MessageResponse(
             id=msg["id"],
             sender_id=msg["sender"]["user_id"],
             receiver_id=msg["receiver"]["user_id"],
-            encrypted_content=msg["encrypted_content"],
+            encrypted_content={
+                "decrypted_text": decrypted_content,
+                "scheme": msg["encrypted_content"].get("scheme") if msg.get("encrypted_content") else "unknown"
+            },
             created_at=msg["created_at"]
         ))
     

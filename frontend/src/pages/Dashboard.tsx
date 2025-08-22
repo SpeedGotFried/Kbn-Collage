@@ -26,11 +26,11 @@ const Dashboard = () => {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   const mapFriendToContact = (friend: any): Contact => {
-    // Backend returns friend_id (the other user's 16-digit user_id) and created_at
+    // Backend returns friend_id (the other user's 16-digit user_id) and friend_phone_number
     return {
       id: friend.friend_id,
-      name: friend.friend_id,
-      phone: "",
+      name: friend.friend_phone_number || friend.friend_id,
+      phone: friend.friend_phone_number || "",
       avatar: "👤",
       status: "offline",
       lastMessage: "",
@@ -58,20 +58,32 @@ const Dashboard = () => {
   };
 
   const mapBackendMessage = (msg: any, currentUserId: string, friendId: string): Message => {
+<<<<<<< Updated upstream
     const sender = msg.sender?.user_id === currentUserId ? "me" : friendId;
     let text = "Encrypted message";
     let type = "text";
     let fileName: string | undefined;
     let fileSize: string | undefined;
     
+=======
+    // Determine if the current user is the sender or receiver
+    const isCurrentUserSender = msg.sender_id === currentUserId;
+    const sender = isCurrentUserSender ? "me" : friendId;
+    
+    let text = "Failed to decrypt message";
+>>>>>>> Stashed changes
     const payload = msg.encrypted_content;
+    
     if (payload && typeof payload === "object") {
-      if (payload.scheme === "PLAINTEXT_DEV" && payload.content_b64) {
+      if (payload.decrypted_text) {
+        text = payload.decrypted_text;
+      } else if (payload.scheme === "PLAINTEXT_DEV" && payload.content_b64) {
         try {
           text = atob(payload.content_b64);
         } catch (e) {
           console.warn("Failed to decode plaintext envelope", e);
         }
+<<<<<<< Updated upstream
       } else if (payload.scheme === "PLAINTEXT_DEV_FILE" && payload.content_b64) {
         // Handle file messages properly
         type = "file";
@@ -86,6 +98,8 @@ const Dashboard = () => {
         } catch (e) {
           fileSize = "Unknown size";
         }
+=======
+>>>>>>> Stashed changes
       }
     }
     
@@ -258,36 +272,20 @@ const Dashboard = () => {
   };
 
   const handleSendFile = (_file: File) => {
-    if (!selectedContact || !_file) return;
-    const form = new FormData();
-    form.append("receiver_id", selectedContact);
-    form.append("file", _file);
-    fetch("http://localhost:8000/v1/chat/send-file", {
-      method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      body: form,
-    })
-      .then(async (res) => {
-        if (!res.ok) throw new Error("upload failed");
-        return res.json();
-      })
-      .then((data) => {
-        const displayed: Message = {
-          id: String(data.id || Date.now()),
-          text: _file.name,
-          sender: "me",
-          timestamp: new Date(),
-          type: "file",
-          fileName: _file.name,
-          fileSize: `${(_file.size / 1024 / 1024).toFixed(1)} MB`,
-        };
-        setMessages((prev) => ({
-          ...prev,
-          [selectedContact]: [...(prev[selectedContact] || []), displayed],
-        }));
-      })
-      .catch((e) => console.error(e));
+    // File upload functionality removed
+    console.log("File upload not supported");
   };
+
+  // Add real-time message updates
+  useEffect(() => {
+    if (!selectedContact) return;
+    
+    const interval = setInterval(() => {
+      fetchMessagesFor(selectedContact);
+    }, 3000); // Check for new messages every 3 seconds
+    
+    return () => clearInterval(interval);
+  }, [selectedContact]);
 
   const handleAddFriend = (contact: Contact) => {
     setContacts(prev => [...prev, contact]);
@@ -350,7 +348,6 @@ const Dashboard = () => {
               contact={contacts.find(c => c.id === selectedContact)!}
               messages={messages[selectedContact] || []}
               onSendMessage={handleSendMessage}
-              onSendFile={handleSendFile}
               isFullscreen={isFullscreen}
               onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
             />

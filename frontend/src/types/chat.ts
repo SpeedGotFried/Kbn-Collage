@@ -14,10 +14,14 @@ export interface Message {
   text: string;
   sender: string; // "me" or contact id
   timestamp: Date;
+<<<<<<< Updated upstream
   type: "text" | "file" | "image";
   fileName?: string;
   fileSize?: string;
   fileContent?: string;
+=======
+  type: "text" | "image";
+>>>>>>> Stashed changes
   mood?: "happy" | "sad" | "angry" | "excited" | "neutral";
 }
 

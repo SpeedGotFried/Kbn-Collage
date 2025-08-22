@@ -24,10 +24,9 @@ class FriendRequest(BaseModel):
 
 
 class FriendResponse(BaseModel):
-    user_id: str
     friend_id: str
-    status: str
-    created_at: datetime
+    friend_phone_number: str
+    created_at: str
 
 
 def send_friend_request(from_user_id: str, to_user_id: str) -> FriendRequest:
@@ -159,50 +158,48 @@ def respond_to_request(request_id: int, accept: bool):
 
 
 def list_friends(user_id: str) -> List[FriendResponse]:
-    # Get user's database ID
+    """List all friends for a user."""
+    # Get user database ID
     user = supabase.table("signup_users").select("id").eq("user_id", user_id).execute()
     if not user.data:
-        raise HTTPException(status_code=404, detail="User not found")
+        return []
     
     user_pk = user.data[0]["id"]
     
-    # Get friends with their info (two-direction fetch, since OR is unsupported)
-    res_1 = (
+    # Fetch both directions and merge
+    res1 = (
         supabase.table("friends")
-        .select("*, friend:signup_users!friend_id(user_id, full_name, phone_number), user:signup_users!user_id(user_id, full_name, phone_number)")
+        .select("friend_id, created_at, friend:signup_users!friend_id(user_id, phone_number)")
         .eq("user_id", user_pk)
         .execute()
     )
-    res_2 = (
+    res2 = (
         supabase.table("friends")
-        .select("*, friend:signup_users!friend_id(user_id, full_name, phone_number), user:signup_users!user_id(user_id, full_name, phone_number)")
+        .select("user_id, created_at, user:signup_users!user_id(user_id, phone_number)")
         .eq("friend_id", user_pk)
         .execute()
     )
-    # Merge results
-    merged_rows = []
-    if res_1.data:
-        merged_rows.extend(res_1.data)
-    if res_2.data:
-        merged_rows.extend(res_2.data)
     
     friends = []
-    for row in merged_rows or []:
-        if row["user_id"] == user_pk:
-            friend_info = row["friend"]
-            friend_id = friend_info["user_id"]
-        else:
-            friend_info = row["user"]
-            friend_id = friend_info["user_id"]
-        
-        friends.append(
-            FriendResponse(
-                user_id=user_id,
-                friend_id=friend_id,
-                status="accepted",  # All entries in friends table are accepted
-                created_at=row["created_at"],
-            )
-        )
+    
+    # Process first direction (user -> friend)
+    if res1.data:
+        for row in res1.data:
+            friends.append(FriendResponse(
+                friend_id=row["friend"]["user_id"],
+                friend_phone_number=row["friend"]["phone_number"],
+                created_at=row["created_at"]
+            ))
+    
+    # Process second direction (friend -> user)
+    if res2.data:
+        for row in res2.data:
+            friends.append(FriendResponse(
+                friend_id=row["user"]["user_id"],
+                friend_phone_number=row["user"]["phone_number"],
+                created_at=row["created_at"]
+            ))
+    
     return friends
 
 
