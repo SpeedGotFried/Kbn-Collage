@@ -17,6 +17,7 @@ export interface Message {
   type: "text" | "file" | "image";
   fileName?: string;
   fileSize?: string;
+  fileContent?: string;
   mood?: "happy" | "sad" | "angry" | "excited" | "neutral";
 }
 

@@ -143,28 +143,70 @@ const ChatWindow = ({ contact, messages, onSendMessage, onSendFile, isFullscreen
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 z-10 relative">
         <AnimatePresence>
-          {messages.map((message, index) => (
+          {messages.map((message) => (
             <motion.div
               key={message.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"}`}
+              className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"} mb-4`}
             >
-              {message.type === "file" ? (
-                <FileCube
-                  fileName={message.fileName!}
-                  fileSize={message.fileSize!}
-                  sender={message.sender}
-                />
-              ) : (
-                <ChatBubble
-                  message={message.text}
-                  sender={message.sender}
-                  timestamp={message.timestamp}
-                  mood={detectMood(message.text)}
-                />
-              )}
+              <div
+                className={`chat-bubble ${
+                  message.sender === "me" ? "sent" : "received"
+                } max-w-xs lg:max-w-md`}
+              >
+                {message.type === "file" ? (
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Paperclip className="w-4 h-4 text-primary" />
+                      <span className="font-medium text-sm">{message.fileName}</span>
+                    </div>
+                    {message.fileSize && (
+                      <span className="text-xs text-muted-foreground">{message.fileSize}</span>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (message.fileContent && message.fileName) {
+                          try {
+                            // Decode base64 content
+                            const binaryString = atob(message.fileContent);
+                            const bytes = new Uint8Array(binaryString.length);
+                            for (let i = 0; i < binaryString.length; i++) {
+                              bytes[i] = binaryString.charCodeAt(i);
+                            }
+                            
+                            // Create blob and download
+                            const blob = new Blob([bytes], { 
+                              type: message.fileName.endsWith('.pdf') ? 'application/pdf' : 
+                                    message.fileName.endsWith('.jpg') || message.fileName.endsWith('.jpeg') ? 'image/jpeg' :
+                                    message.fileName.endsWith('.png') ? 'image/png' : 'application/octet-stream'
+                            });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = message.fileName;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                          } catch (e) {
+                            console.error('Failed to download file:', e);
+                            alert('Failed to download file');
+                          }
+                        }
+                      }}
+                      className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm hover:bg-primary/90 transition-colors"
+                    >
+                      Download File
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-sm">{message.text}</p>
+                )}
+                <span className="text-xs text-muted-foreground mt-1 block">
+                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>

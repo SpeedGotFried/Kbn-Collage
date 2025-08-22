@@ -2,7 +2,18 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import ContactSidebar from "@/components/chat/ContactSidebar";
 import ChatWindow from "@/components/chat/ChatWindow";
-import { Contact, Message } from "@/types/chat";
+import { Contact } from "@/types/chat";
+
+interface Message {
+  id: string;
+  text: string;
+  sender: string;
+  timestamp: Date;
+  type: "text" | "file" | "image";
+  fileName?: string;
+  fileSize?: string;
+  fileContent?: string;
+}
 
 const Dashboard = () => {
   const [selectedContact, setSelectedContact] = useState<string | null>(null);
@@ -49,6 +60,10 @@ const Dashboard = () => {
   const mapBackendMessage = (msg: any, currentUserId: string, friendId: string): Message => {
     const sender = msg.sender?.user_id === currentUserId ? "me" : friendId;
     let text = "Encrypted message";
+    let type = "text";
+    let fileName: string | undefined;
+    let fileSize: string | undefined;
+    
     const payload = msg.encrypted_content;
     if (payload && typeof payload === "object") {
       if (payload.scheme === "PLAINTEXT_DEV" && payload.content_b64) {
@@ -58,38 +73,89 @@ const Dashboard = () => {
           console.warn("Failed to decode plaintext envelope", e);
         }
       } else if (payload.scheme === "PLAINTEXT_DEV_FILE" && payload.content_b64) {
-        // Represent file messages in the UI as filename placeholder
-        text = payload.filename || "(file)";
+        // Handle file messages properly
+        type = "file";
+        fileName = payload.filename;
+        text = `📎 ${payload.filename}`;
+        // Calculate file size from base64 content
+        try {
+          const bytes = atob(payload.content_b64).length;
+          fileSize = bytes > 1024 * 1024 
+            ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+            : `${(bytes / 1024).toFixed(1)} KB`;
+        } catch (e) {
+          fileSize = "Unknown size";
+        }
       }
     }
+    
     return {
       id: String(msg.id),
       text,
       sender,
       timestamp: new Date(msg.created_at),
-      type: "text"
+      type,
+      fileName,
+      fileSize
     };
   };
 
-  const fetchMessagesFor = async (friendId: string) => {
+  const fetchMessages = async (contactId: string) => {
+    const token = localStorage.getItem('token');
     if (!token) return;
     try {
-      const resProfile = await fetch("http://localhost:8000/v1/profile/me", {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await fetch(`http://localhost:8000/v1/chat/messages/${contactId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!resProfile.ok) return;
-      const me = await resProfile.json();
-      const myUserId: string = me.user_id;
+      if (!response.ok) throw new Error('Failed to fetch messages');
+      const data = await response.json();
 
-      const res = await fetch(`http://localhost:8000/v1/chat/messages/${friendId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const fetchedMessages: Message[] = data.map((msg: any) => {
+        let messageText = "Encrypted message";
+        let messageType: "text" | "file" | "image" = "text";
+        let fileName: string | undefined;
+        let fileSize: string | undefined;
+        let fileContent: string | undefined;
+        
+        // Check for dev plaintext fallback
+        if (msg.encrypted_content?.scheme === "PLAINTEXT_DEV" && msg.encrypted_content?.content_b64) {
+          try {
+            messageText = atob(msg.encrypted_content.content_b64);
+          } catch (e) {
+            console.error("Failed to decode base64 plaintext:", e);
+          }
+        } else if (msg.encrypted_content?.scheme === "PLAINTEXT_DEV_FILE" && msg.encrypted_content?.content_b64) {
+          // Handle file messages
+          messageType = "file";
+          fileName = msg.encrypted_content.filename;
+          messageText = `File: ${fileName}`;
+          fileContent = msg.encrypted_content.content_b64;
+          
+          // Calculate file size
+          try {
+            const bytes = atob(msg.encrypted_content.content_b64).length;
+            fileSize = bytes > 1024 * 1024 
+              ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+              : `${(bytes / 1024).toFixed(1)} KB`;
+          } catch (e) {
+            fileSize = "Unknown size";
+          }
+        }
+        
+        return {
+          id: msg.id.toString(),
+          text: messageText,
+          sender: msg.sender.user_id === contactId ? contactId : "me",
+          timestamp: new Date(msg.created_at),
+          type: messageType,
+          fileName,
+          fileSize,
+          fileContent
+        };
       });
-      if (!res.ok) return;
-      const data = await res.json();
-      const mapped: Message[] = (data || []).map((m: any) => mapBackendMessage(m, myUserId, friendId));
-      setMessages(prev => ({ ...prev, [friendId]: mapped }));
-    } catch (e) {
-      console.error("Failed to load messages", e);
+      setMessages(prev => ({ ...prev, [contactId]: fetchedMessages }));
+    } catch (error) {
+      console.error("Error fetching messages:", error);
     }
   };
 
@@ -162,7 +228,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (selectedContact) {
-      fetchMessagesFor(selectedContact);
+      fetchMessages(selectedContact);
     }
   }, [selectedContact]);
 
