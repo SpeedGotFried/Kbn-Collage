@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Paperclip, Smile, MoreVertical, Maximize, Minimize } from "lucide-react";
+import { Send, Paperclip, MoreVertical, Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Contact, Message } from "@/types/chat";
@@ -11,7 +11,7 @@ import TeleportOrb from "./TeleportOrb";
 import IncognitoToggle from "./IncognitoToggle";
 import MessageAnimation from "./MessageAnimation";
 import IncognitoBanner from "./IncognitoBanner";
-import EmojiPicker from "./EmojiPicker";
+// Emoji picker removed
 
 interface ChatWindowProps {
   contact: Contact;
@@ -27,7 +27,7 @@ const ChatWindow = ({ contact, messages, onSendMessage, onSendFile, isFullscreen
   const [showTeleport, setShowTeleport] = useState(false);
   const [isIncognito, setIsIncognito] = useState(false);
   const [animatingMessage, setAnimatingMessage] = useState<string | null>(null);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  // Emoji picker removed
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -177,20 +177,7 @@ const ChatWindow = ({ contact, messages, onSendMessage, onSendFile, isFullscreen
             className="flex justify-start"
           >
             <div className="chat-bubble received p-4">
-              <div className="flex space-x-1">
-                {[0, 1, 2].map((i) => (
-                  <motion.div
-                    key={i}
-                    animate={{ y: [0, -4, 0] }}
-                    transition={{
-                      duration: 0.6,
-                      repeat: Infinity,
-                      delay: i * 0.2
-                    }}
-                    className="w-2 h-2 bg-primary rounded-full"
-                  />
-                ))}
-              </div>
+              <div className="text-sm text-muted-foreground">typing...</div>
             </div>
           </motion.div>
         )}
@@ -234,25 +221,7 @@ const ChatWindow = ({ contact, messages, onSendMessage, onSendFile, isFullscreen
             <Paperclip className="w-4 h-4" />
           </Button>
           
-          <div className="relative">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="hover-glow"
-            >
-              <Smile className="w-4 h-4" />
-            </Button>
-            
-            <EmojiPicker
-              isOpen={showEmojiPicker}
-              onClose={() => setShowEmojiPicker(false)}
-              onEmojiSelect={(emoji) => {
-                setInputValue(prev => prev + emoji);
-              }}
-            />
-          </div>
+          {/* Emoji picker removed */}
           
           <Input
             value={inputValue}

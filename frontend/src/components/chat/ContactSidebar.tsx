@@ -115,9 +115,7 @@ const ContactSidebar = ({ contacts, selectedContact, onSelectContact, onAddFrien
             <div className="flex items-center gap-3">
               {/* Avatar */}
               <div onClick={(e) => handleAvatarClick(contact, e)}>
-                <QuantumAvatar status={contact.status} size="md">
-                  <span className="text-lg">{contact.avatar}</span>
-                </QuantumAvatar>
+                <QuantumAvatar status={contact.status} size="md" />
               </div>
 
               {/* Contact Info */}

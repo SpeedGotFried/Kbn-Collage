@@ -12,6 +12,10 @@ load_dotenv()
 from auth import PhoneRequest, VerifyOTPRequest, SignupRequest, SetIncognitoPasswordRequest, VerifyIncognitoPasswordRequest, register_or_login_user, send_otp, verify_otp, create_jwt_token, get_current_user, signup_user, format_phone_number, supabase, check_user_has_incognito_password, set_incognito_password, verify_incognito_password
 from friends import send_friend_request, get_friend_requests, respond_to_request, list_friends, generate_qr_for_user
 from chat import MessageSend, send_message, get_messages, get_conversations
+from fastapi import UploadFile, File, Form
+from chat import send_message as send_text_message
+from chat import is_friend as is_friend_check
+import base64
 
 app = FastAPI(title="Quantum-Safe Secure Messaging API")
 
@@ -225,6 +229,31 @@ async def api_chat_messages(friend_id: str, user=Depends(get_current_user)):
 @app.get("/v1/chat/conversations")
 async def api_chat_conversations(user=Depends(get_current_user)):
     return get_conversations(user.user_id)
+
+
+# File message upload (PDF/images) - dev plaintext envelope
+@app.post("/v1/chat/send-file")
+async def api_chat_send_file(
+    receiver_id: str = Form(...),
+    file: UploadFile = File(...),
+    user=Depends(get_current_user)
+):
+    # Verify friendship
+    if not is_friend_check(user.user_id, receiver_id):
+        raise HTTPException(status_code=403, detail="Can only message friends")
+
+    # Read file bytes
+    data = await file.read()
+    b64 = base64.b64encode(data).decode("ascii")
+    # Reuse text send with a dev envelope
+    content = json.dumps({
+        "scheme": "PLAINTEXT_DEV_FILE",
+        "filename": file.filename,
+        "mime": file.content_type,
+        "content_b64": b64,
+    })
+    msg = await send_text_message(user.user_id, receiver_id, content)
+    return msg
 
 
 if __name__ == "__main__":

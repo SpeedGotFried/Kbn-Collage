@@ -57,6 +57,9 @@ const Dashboard = () => {
         } catch (e) {
           console.warn("Failed to decode plaintext envelope", e);
         }
+      } else if (payload.scheme === "PLAINTEXT_DEV_FILE" && payload.content_b64) {
+        // Represent file messages in the UI as filename placeholder
+        text = payload.filename || "(file)";
       }
     }
     return {
@@ -189,7 +192,35 @@ const Dashboard = () => {
   };
 
   const handleSendFile = (_file: File) => {
-    // File sending pipeline not implemented to backend yet.
+    if (!selectedContact || !_file) return;
+    const form = new FormData();
+    form.append("receiver_id", selectedContact);
+    form.append("file", _file);
+    fetch("http://localhost:8000/v1/chat/send-file", {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      body: form,
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("upload failed");
+        return res.json();
+      })
+      .then((data) => {
+        const displayed: Message = {
+          id: String(data.id || Date.now()),
+          text: _file.name,
+          sender: "me",
+          timestamp: new Date(),
+          type: "file",
+          fileName: _file.name,
+          fileSize: `${(_file.size / 1024 / 1024).toFixed(1)} MB`,
+        };
+        setMessages((prev) => ({
+          ...prev,
+          [selectedContact]: [...(prev[selectedContact] || []), displayed],
+        }));
+      })
+      .catch((e) => console.error(e));
   };
 
   const handleAddFriend = (contact: Contact) => {
