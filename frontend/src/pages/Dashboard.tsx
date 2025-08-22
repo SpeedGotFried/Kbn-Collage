@@ -47,12 +47,21 @@ const Dashboard = () => {
   };
 
   const mapBackendMessage = (msg: any, currentUserId: string, friendId: string): Message => {
-    // We don't have decrypted content here; the backend stores encrypted JSON.
-    // For UI placeholder, we can show a generic label until decryption is implemented on client.
     const sender = msg.sender?.user_id === currentUserId ? "me" : friendId;
+    let text = "Encrypted message";
+    const payload = msg.encrypted_content;
+    if (payload && typeof payload === "object") {
+      if (payload.scheme === "PLAINTEXT_DEV" && payload.content_b64) {
+        try {
+          text = atob(payload.content_b64);
+        } catch (e) {
+          console.warn("Failed to decode plaintext envelope", e);
+        }
+      }
+    }
     return {
       id: String(msg.id),
-      text: "Encrypted message",
+      text,
       sender,
       timestamp: new Date(msg.created_at),
       type: "text"
