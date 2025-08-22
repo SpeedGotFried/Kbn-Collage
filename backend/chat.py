@@ -44,13 +44,23 @@ def is_friend(user1_id: str, user2_id: str) -> bool:
     user1_pk = user1.data[0]["id"]
     user2_pk = user2.data[0]["id"]
     
-    res = (
+    res1 = (
         supabase.table("friends")
-        .select("*")
-        .or_(f"and(user_id.eq.{user1_pk},friend_id.eq.{user2_pk}),and(user_id.eq.{user2_pk},friend_id.eq.{user1_pk})")
+        .select("id")
+        .eq("user_id", user1_pk)
+        .eq("friend_id", user2_pk)
         .execute()
     )
-    return bool(res.data)
+    if res1.data:
+        return True
+    res2 = (
+        supabase.table("friends")
+        .select("id")
+        .eq("user_id", user2_pk)
+        .eq("friend_id", user1_pk)
+        .execute()
+    )
+    return bool(res2.data)
 
 
 async def send_message(from_user_id: str, to_user_id: str, content: str) -> MessageResponse:
@@ -114,16 +124,33 @@ async def get_messages(user_id: str, friend_id: str) -> List[MessageResponse]:
     user_pk = user.data[0]["id"]
     friend_pk = friend.data[0]["id"]
 
-    res = (
+    # Fetch messages in both directions then merge and sort
+    res1 = (
         supabase.table("messages")
         .select("*, sender:signup_users!sender_id(user_id), receiver:signup_users!receiver_id(user_id)")
-        .or_(f"and(sender_id.eq.{user_pk},receiver_id.eq.{friend_pk}),and(sender_id.eq.{friend_pk},receiver_id.eq.{user_pk})")
+        .eq("sender_id", user_pk)
+        .eq("receiver_id", friend_pk)
         .order("created_at")
         .execute()
     )
+    res2 = (
+        supabase.table("messages")
+        .select("*, sender:signup_users!sender_id(user_id), receiver:signup_users!receiver_id(user_id)")
+        .eq("sender_id", friend_pk)
+        .eq("receiver_id", user_pk)
+        .order("created_at")
+        .execute()
+    )
+    combined = []
+    if res1.data:
+        combined.extend(res1.data)
+    if res2.data:
+        combined.extend(res2.data)
+    # Sort by created_at to preserve chronology
+    combined.sort(key=lambda m: m.get("created_at", ""))
 
     messages = []
-    for msg in res.data or []:
+    for msg in combined or []:
         messages.append(MessageResponse(
             id=msg["id"],
             sender_id=msg["sender"]["user_id"],
@@ -164,16 +191,29 @@ def get_conversations(user_id: str) -> List[dict]:
     
     user_pk = user.data[0]["id"]
     
-    res = (
+    # Fetch both directions and merge
+    res1 = (
         supabase.table("messages")
         .select("sender_id, receiver_id, created_at, sender:signup_users!sender_id(user_id), receiver:signup_users!receiver_id(user_id)")
-        .or_(f"sender_id.eq.{user_pk},receiver_id.eq.{user_pk}")
+        .eq("sender_id", user_pk)
         .order("created_at", desc=True)
         .execute()
     )
+    res2 = (
+        supabase.table("messages")
+        .select("sender_id, receiver_id, created_at, sender:signup_users!sender_id(user_id), receiver:signup_users!receiver_id(user_id)")
+        .eq("receiver_id", user_pk)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    merged_rows = []
+    if res1.data:
+        merged_rows.extend(res1.data)
+    if res2.data:
+        merged_rows.extend(res2.data)
 
     conversations = {}
-    for msg in res.data or []:
+    for msg in merged_rows or []:
         if msg["sender_id"] == user_pk:
             other_user_id = msg["receiver"]["user_id"]
         else:
