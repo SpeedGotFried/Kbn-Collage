@@ -44,25 +44,46 @@ def send_friend_request(from_user_id: str, to_user_id: str) -> FriendRequest:
     sender_id = from_user.data[0]["id"]
     receiver_id = to_user.data[0]["id"]
 
-    # Check if already friends
-    existing_friendship = (
+    # Check if already friends (either direction)
+    existing_friendship_1 = (
         supabase.table("friends")
         .select("*")
-        .or_(f"and(user_id.eq.{sender_id},friend_id.eq.{receiver_id}),and(user_id.eq.{receiver_id},friend_id.eq.{sender_id})")
+        .eq("user_id", sender_id)
+        .eq("friend_id", receiver_id)
         .execute()
     )
-    if existing_friendship.data:
+    existing_friendship_2 = (
+        supabase.table("friends")
+        .select("*")
+        .eq("user_id", receiver_id)
+        .eq("friend_id", sender_id)
+        .execute()
+    )
+    if (existing_friendship_1.data and len(existing_friendship_1.data) > 0) or (
+        existing_friendship_2.data and len(existing_friendship_2.data) > 0
+    ):
         raise HTTPException(status_code=400, detail="You are already friends")
 
-    # Check if pending request exists
-    existing_request = (
+    # Check if a pending request exists (either direction)
+    existing_request_1 = (
         supabase.table("friend_requests")
         .select("*")
-        .or_(f"and(sender_id.eq.{sender_id},receiver_id.eq.{receiver_id}),and(sender_id.eq.{receiver_id},receiver_id.eq.{sender_id})")
+        .eq("sender_id", sender_id)
+        .eq("receiver_id", receiver_id)
         .eq("status", "pending")
         .execute()
     )
-    if existing_request.data:
+    existing_request_2 = (
+        supabase.table("friend_requests")
+        .select("*")
+        .eq("sender_id", receiver_id)
+        .eq("receiver_id", sender_id)
+        .eq("status", "pending")
+        .execute()
+    )
+    if (existing_request_1.data and len(existing_request_1.data) > 0) or (
+        existing_request_2.data and len(existing_request_2.data) > 0
+    ):
         raise HTTPException(status_code=400, detail="Friend request already exists")
 
     data = {
@@ -145,16 +166,28 @@ def list_friends(user_id: str) -> List[FriendResponse]:
     
     user_pk = user.data[0]["id"]
     
-    # Get friends with their info
-    res = (
+    # Get friends with their info (two-direction fetch, since OR is unsupported)
+    res_1 = (
         supabase.table("friends")
         .select("*, friend:signup_users!friend_id(user_id, full_name, phone_number), user:signup_users!user_id(user_id, full_name, phone_number)")
-        .or_(f"user_id.eq.{user_pk},friend_id.eq.{user_pk}")
+        .eq("user_id", user_pk)
         .execute()
     )
+    res_2 = (
+        supabase.table("friends")
+        .select("*, friend:signup_users!friend_id(user_id, full_name, phone_number), user:signup_users!user_id(user_id, full_name, phone_number)")
+        .eq("friend_id", user_pk)
+        .execute()
+    )
+    # Merge results
+    merged_rows = []
+    if res_1.data:
+        merged_rows.extend(res_1.data)
+    if res_2.data:
+        merged_rows.extend(res_2.data)
     
     friends = []
-    for row in res.data or []:
+    for row in merged_rows or []:
         if row["user_id"] == user_pk:
             friend_info = row["friend"]
             friend_id = friend_info["user_id"]
