@@ -14,6 +14,9 @@ from supabase import create_client, Client
 from pydantic import BaseModel, Field, AliasChoices
 from passlib.context import CryptContext
 
+# Import OTP sender module
+from otp_sender import send_otp_sms
+
 
 # Schemas
 class PhoneRequest(BaseModel):
@@ -61,13 +64,8 @@ jwt_secret = os.getenv("JWT_SECRET", "secret")
 otp_api_url = os.getenv("OTP_API_URL", "")
 otp_api_key = os.getenv("OTP_API_KEY", "")
 
-# SMS Configuration
-sms_secret = os.getenv("SMS_SECRET", "")
-sms_sender = os.getenv("SMS_SENDER", "")
-sms_tempid = os.getenv("SMS_TEMPID", "")
-sms_route = os.getenv("SMS_ROUTE", "")
-sms_msgtype = os.getenv("SMS_MSGTYPE", "")
-sms_base_url = os.getenv("SMS_BASE_URL", "")
+# SMS Configuration - Now handled by otp_sender.py
+# Old SMS variables removed - use TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER instead
 
 if not supabase_url or not supabase_key:
     raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set")
@@ -191,86 +189,8 @@ async def store_otp_in_db(phone: str, otp: str) -> bool:
         return False
 
 
-async def send_otp_sms(phone: str, otp: str) -> dict:
-    """Send OTP via SMS using configured SMS service."""
-    if not all([sms_secret, sms_sender, sms_base_url]):
-        print(f"[DEV] SMS not configured. OTP for {phone}: {otp}")
-        return {
-            "success": True,
-            "message": f"SMS sent successfully to {phone} (dev mode)",
-            "apiResponse": "Development mode - SMS not actually sent",
-            "status": 200
-        }
-    
-    try:
-        formatted_phone = format_phone_number(phone)
-        # Add country code for SMS API (SMS services typically need full international format)
-        sms_phone = f"91{formatted_phone}"
-        # Use the exact message format from working backend_demo
-        message = f"Welcome to NighaTech Global Your OTP for authentication is {otp} don't share with anybody Thank you"
-        
-        # Prepare SMS URL with parameters exactly like working backend_demo
-        params = {
-            "secret": sms_secret,
-            "sender": sms_sender,
-            "tempid": sms_tempid,
-            "receiver": sms_phone,
-            "route": sms_route,
-            "msgtype": sms_msgtype,
-            "sms": message
-        }
-        
-        # Remove None values
-        params = {k: v for k, v in params.items() if v}
-        
-        # Increased timeout and added retry logic for network issues
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            try:
-                response = await client.get(sms_base_url, params=params)
-                response_text = response.text
-                
-                print(f"SMS API Response Status: {response.status_code}")
-                print(f"SMS API Response Text: {response_text}")
-                
-                if response.status_code == 200:
-                    print(f"✅ SMS sent successfully to {phone}")
-                    return {
-                        "success": True,
-                        "message": f"SMS sent successfully to {phone}",
-                        "apiResponse": response_text,
-                        "status": response.status_code
-                    }
-                else:
-                    print(f"❌ SMS failed for {phone}")
-                    return {
-                        "success": False,
-                        "error": f"SMS API returned status {response.status_code}: {response_text}",
-                        "apiResponse": response_text,
-                        "status": response.status_code
-                    }
-            except httpx.ConnectError as conn_err:
-                print(f"❌ SMS service connection failed: {conn_err}")
-                print(f"[FALLBACK] SMS service unavailable. OTP for {phone}: {otp}")
-                # Return success in development to allow authentication to continue
-                return {
-                    "success": True,  # Changed to True to allow dev workflow
-                    "message": f"SMS service temporarily unavailable. OTP: {otp} (dev fallback)",
-                    "apiResponse": f"Connection failed to SMS service: {str(conn_err)}",
-                    "status": 503,
-                    "fallback": True
-                }
-                
-    except Exception as e:
-        print(f"Failed to send SMS: {e}")
-        print(f"[FALLBACK] SMS error occurred. OTP for {phone}: {otp}")
-        # Return success in development to allow authentication to continue
-        return {
-            "success": True,  # Changed to True to allow dev workflow
-            "message": f"SMS error occurred. OTP: {otp} (dev fallback)",
-            "error": f"Failed to send SMS: {str(e)}",
-            "exception": type(e).__name__,
-            "fallback": True
-        }
+# OTP SMS sending is now handled by otp_sender.py module
+# The send_otp_sms function has been moved to otp_sender.py
 
 
 async def send_otp(phone: str) -> dict:
