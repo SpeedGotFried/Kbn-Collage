@@ -8,37 +8,37 @@
 
 A next-generation secure messaging platform featuring quantum-safe encryption, immersive 3D visual effects, and advanced privacy features. Built with React, TypeScript, FastAPI, and cutting-edge web technologies.
 
-## 🌟 Features
+## Features
 
-### 🔐 Security & Privacy
+### Security & Privacy
 - **Quantum-Safe Encryption**: Post-quantum cryptography for future-proof security
 - **End-to-End Encryption**: Messages encrypted client-side before transmission
 - **Incognito Mode**: Password-protected private conversations with auto-delete
 - **OTP Authentication**: Secure phone-based verification with Twilio SMS
 - **JWT Tokens**: Stateless authentication with secure token management
 
-### 🎨 Immersive 3D Experience
+### Immersive 3D Experience
 - **Quantum Avatars**: Mood-reactive 3D avatars that glow based on status
 - **Teleport Messages**: Animated message delivery with comet-like effects
 - **Floating Particles**: Dynamic 3D particle systems using Three.js
 - **Wave Backgrounds**: Animated wave effects for immersive atmosphere
 - **File Cubes**: 3D encrypted cubes that unfold to reveal files
 
-### 💬 Advanced Messaging
+### Advanced Messaging
 - **Real-time Chat**: Instant message delivery with WebSocket support
 - **File Sharing**: Secure encrypted file transfer with 3D visualizations
 - **Mood Detection**: AI-powered sentiment analysis for dynamic UI
 - **Contact Management**: QR code-based friend discovery and management
 - **Message Animations**: Smooth transitions and micro-interactions
 
-### 🎯 User Experience
+### User Experience
 - **Responsive Design**: Mobile-first approach with adaptive layouts
 - **Dark/Light Themes**: Dynamic theme switching with CSS variables
 - **Accessibility**: ARIA-compliant components with keyboard navigation
 - **Performance**: Optimized rendering with React Query and lazy loading
 - **Modern UI**: Built with shadcn/ui components and Tailwind CSS
 
-## 🏗️ Architecture
+## Architecture
 
 ### Frontend (React + TypeScript)
 ```
@@ -79,7 +79,7 @@ backend/
 - **Signup Users**: User registration data
 - **OTP Verifications**: One-time password management
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js 18+ and npm/yarn
@@ -192,7 +192,7 @@ backend/
 - `GET /v1/chat/messages/{friend_id}` - Get conversation history
 - `GET /v1/chat/conversations` - Get all conversations
 
-## 🎨 UI Components
+## UI Components
 
 ### 3D Components
 - **FloatingParticles**: Dynamic particle system with Three.js
@@ -213,7 +213,7 @@ Built with shadcn/ui for consistent design:
 - Responsive layouts and accessibility features
 - Theme switching and dark mode support
 
-## 🔒 Security Features
+## Security Features
 
 ### Encryption
 - **Post-Quantum Cryptography**: Future-proof encryption algorithms
@@ -233,7 +233,7 @@ Built with shadcn/ui for consistent design:
 - **Session Management**: Automatic token refresh
 - **Access Control**: Route protection and authorization
 
-## 🚀 Performance Optimizations
+## Performance Optimizations
 
 ### Frontend
 - **React Query**: Efficient data fetching and caching
@@ -247,7 +247,7 @@ Built with shadcn/ui for consistent design:
 - **Connection Pooling**: Efficient database connections
 - **Caching**: Response caching for static data
 
-## 🧪 Testing
+## Testing
 
 ### Frontend Testing
 ```bash
@@ -263,7 +263,7 @@ pytest -v            # Verbose output
 pytest --cov         # Coverage report
 ```
 
-## 📦 Deployment
+## Deployment
 
 ### Frontend Deployment
 ```bash
@@ -288,7 +288,7 @@ Ensure all required environment variables are set in production:
 - CORS origins
 - SSL certificates
 
-## 🤝 Contributing
+## Contributing
 
 1. **Fork the repository**
 2. **Create feature branch**: `git checkout -b feature/amazing-feature`
@@ -303,11 +303,11 @@ Ensure all required environment variables are set in production:
 - Follow the existing code style
 - Add documentation for new features
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **shadcn/ui** for beautiful UI components
 - **Three.js** for 3D graphics capabilities
@@ -316,7 +316,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **FastAPI** for high-performance backend
 - **Supabase** for backend-as-a-service
 
-## 📞 Support
+## Support
 
 - **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
@@ -325,3 +325,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **QuantumChat** - Experience the future of secure messaging with immersive 3D effects and quantum-safe encryption. 🚀✨
+
