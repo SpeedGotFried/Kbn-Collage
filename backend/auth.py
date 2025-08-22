@@ -38,6 +38,7 @@ class UserResponse(BaseModel):
     id: str
     phone: str
     user_id: str  # 16-digit ID
+    full_name: str | None = None  # Add full_name field
     created_at: datetime
 
 
@@ -123,6 +124,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         id=str(user_data["id"]),
         phone=user_data["phone_number"],
         user_id=user_data["user_id"],
+        full_name=user_data.get("full_name"),  # Include full_name
         created_at=user_data["created_at"]
     )
 

@@ -175,12 +175,23 @@ async def profile_qr(user=Depends(get_current_user)):
 # Current user profile (used by frontend to fetch own 16-digit ID)
 @app.get("/v1/profile/me")
 async def profile_me(user=Depends(get_current_user)):
-    return {
-        "id": user.id,
-        "user_id": user.user_id,
-        "phone_number": user.phone,
-        "created_at": user.created_at,
-    }
+    try:
+        # Fetch complete user profile from database including full_name
+        user_profile = supabase.table("signup_users").select("id, user_id, full_name, phone_number, created_at").eq("user_id", user.user_id).execute()
+        
+        if not user_profile.data:
+            raise HTTPException(status_code=404, detail="User profile not found")
+        
+        profile = user_profile.data[0]
+        return {
+            "id": profile["id"],
+            "user_id": profile["user_id"],
+            "full_name": profile["full_name"],
+            "phone_number": profile["phone_number"],
+            "created_at": profile["created_at"]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch profile: {str(e)}")
 
 
 # Get user profile by user_id (16-digit ID)
@@ -204,6 +215,35 @@ async def profile_user(user_id: str, user=Depends(get_current_user)):
         "phone_number": profile["phone_number"],
         "created_at": profile["created_at"]
     }
+
+
+# Update user profile
+class ProfileUpdateRequest(BaseModel):
+    full_name: str
+
+
+@app.put("/v1/profile/update")
+async def profile_update(req: ProfileUpdateRequest, user=Depends(get_current_user)):
+    try:
+        # Update user's full_name in database
+        result = supabase.table("signup_users").update({
+            "full_name": req.full_name
+        }).eq("user_id", user.user_id).execute()
+        
+        if not result.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {
+            "success": True,
+            "message": "Profile updated successfully",
+            "user": {
+                "user_id": user.user_id,
+                "full_name": req.full_name,
+                "phone_number": user.phone
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update profile: {str(e)}")
 
 
 # Friends endpoints
