@@ -14,9 +14,7 @@ export interface Message {
   text: string;
   sender: string; // "me" or contact id
   timestamp: Date;
-  type: "text" | "file" | "image";
-  fileName?: string;
-  fileSize?: string;
+  type: "text";
   mood?: "happy" | "sad" | "angry" | "excited" | "neutral";
 }
 

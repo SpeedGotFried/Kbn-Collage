@@ -16,9 +16,10 @@ const Dashboard = () => {
 
   const mapFriendToContact = (friend: any): Contact => {
     // Backend returns friend_id (the other user's 16-digit user_id) and created_at
+    // We need to fetch the actual user information to get the name
     return {
       id: friend.friend_id,
-      name: friend.friend_id,
+      name: friend.friend_name || friend.friend_id, // Use friend_name if available, fallback to ID
       phone: "",
       avatar: "👤",
       status: "offline",
@@ -36,7 +37,30 @@ const Dashboard = () => {
       });
       if (!res.ok) return;
       const data = await res.json();
-      const mapped: Contact[] = (data || []).map(mapFriendToContact);
+      
+      // Fetch user details for each friend to get their names
+      const contactsWithNames = await Promise.all(
+        data.map(async (friend: any) => {
+          try {
+            // Fetch user profile to get the actual name
+            const profileRes = await fetch(`http://localhost:8000/v1/profile/user/${friend.friend_id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (profileRes.ok) {
+              const profile = await profileRes.json();
+              return {
+                ...friend,
+                friend_name: profile.full_name || profile.user_id
+              };
+            }
+          } catch (e) {
+            console.warn("Failed to fetch friend profile:", e);
+          }
+          return friend;
+        })
+      );
+      
+      const mapped: Contact[] = contactsWithNames.map(mapFriendToContact);
       setContacts(mapped);
       if (!selectedContact && mapped.length > 0) {
         setSelectedContact(mapped[0].id);
@@ -47,7 +71,18 @@ const Dashboard = () => {
   };
 
   const mapBackendMessage = (msg: any, currentUserId: string, friendId: string): Message => {
-    const sender = msg.sender?.user_id === currentUserId ? "me" : friendId;
+    // Debug: Log the message structure
+    console.log("Raw message from backend:", msg);
+    console.log("Current user ID:", currentUserId);
+    console.log("Friend ID:", friendId);
+    
+    // Check if the current user is the sender or receiver
+    const isCurrentUserSender = msg.sender_id === currentUserId;
+    const sender = isCurrentUserSender ? "me" : friendId;
+    
+    console.log("Is current user sender?", isCurrentUserSender);
+    console.log("Final sender value:", sender);
+    
     let text = "Encrypted message";
     const payload = msg.encrypted_content;
     if (payload && typeof payload === "object") {
@@ -57,9 +92,6 @@ const Dashboard = () => {
         } catch (e) {
           console.warn("Failed to decode plaintext envelope", e);
         }
-      } else if (payload.scheme === "PLAINTEXT_DEV_FILE" && payload.content_b64) {
-        // Represent file messages in the UI as filename placeholder
-        text = payload.filename || "(file)";
       }
     }
     return {
@@ -166,6 +198,17 @@ const Dashboard = () => {
     }
   }, [selectedContact]);
 
+  // Real-time message polling
+  useEffect(() => {
+    if (!selectedContact) return;
+    
+    const interval = setInterval(() => {
+      fetchMessagesFor(selectedContact);
+    }, 3000); // Check for new messages every 3 seconds
+    
+    return () => clearInterval(interval);
+  }, [selectedContact]);
+
   const handleSendMessage = async (text: string) => {
     if (!selectedContact) return;
     const backendMsg = await sendMessageToBackend(selectedContact, text);
@@ -191,37 +234,7 @@ const Dashboard = () => {
     ));
   };
 
-  const handleSendFile = (_file: File) => {
-    if (!selectedContact || !_file) return;
-    const form = new FormData();
-    form.append("receiver_id", selectedContact);
-    form.append("file", _file);
-    fetch("http://localhost:8000/v1/chat/send-file", {
-      method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      body: form,
-    })
-      .then(async (res) => {
-        if (!res.ok) throw new Error("upload failed");
-        return res.json();
-      })
-      .then((data) => {
-        const displayed: Message = {
-          id: String(data.id || Date.now()),
-          text: _file.name,
-          sender: "me",
-          timestamp: new Date(),
-          type: "file",
-          fileName: _file.name,
-          fileSize: `${(_file.size / 1024 / 1024).toFixed(1)} MB`,
-        };
-        setMessages((prev) => ({
-          ...prev,
-          [selectedContact]: [...(prev[selectedContact] || []), displayed],
-        }));
-      })
-      .catch((e) => console.error(e));
-  };
+  // File upload functionality removed
 
   const handleAddFriend = (contact: Contact) => {
     setContacts(prev => [...prev, contact]);
@@ -284,7 +297,6 @@ const Dashboard = () => {
               contact={contacts.find(c => c.id === selectedContact)!}
               messages={messages[selectedContact] || []}
               onSendMessage={handleSendMessage}
-              onSendFile={handleSendFile}
               isFullscreen={isFullscreen}
               onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
             />

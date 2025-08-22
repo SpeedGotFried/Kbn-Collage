@@ -236,28 +236,7 @@
     animation: teleport-fly 0.8s ease-out forwards;
   }
 
-  /* File Cube Effects */
-  .file-cube {
-    backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--border) / 0.2);
-    border-radius: 1rem;
-    background: hsl(var(--glass-bg));
-    box-shadow: var(--shadow-glass);
-    border: 1px solid hsl(var(--glass-border));
-    position: relative;
-    cursor: pointer;
-    transform: translateZ(0);
-    transition: all 0.5s ease;
-    transform-style: preserve-3d;
-  }
 
-  .file-cube:hover {
-    transform: rotateX(15deg) rotateY(15deg) scale(1.05);
-  }
-
-  .file-cube.unfolding {
-    animation: cube-unfold 1s ease-out forwards;
-  }
 
   /* Mood Reactive Backgrounds */
   .mood-happy {
@@ -318,13 +297,7 @@
     }
   }
 
-  @keyframes cube-unfold {
-    0% { transform: rotateX(0deg) rotateY(0deg); }
-    25% { transform: rotateX(90deg) rotateY(45deg); }
-    50% { transform: rotateX(180deg) rotateY(90deg); }
-    75% { transform: rotateX(270deg) rotateY(135deg); }
-    100% { transform: rotateX(360deg) rotateY(180deg) scale(1.2); }
-  }
+
 
   @keyframes angry-pulse {
     0%, 100% { background-color: hsl(var(--mood-angry) / 0.3); }

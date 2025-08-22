@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Paperclip, MoreVertical, Maximize, Minimize } from "lucide-react";
+import { Send, MoreVertical, Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Contact, Message } from "@/types/chat";
 import QuantumAvatar from "./QuantumAvatar";
 import ChatBubble from "./ChatBubble";
-import FileCube from "./FileCube";
+
 import TeleportOrb from "./TeleportOrb";
 import IncognitoToggle from "./IncognitoToggle";
 import MessageAnimation from "./MessageAnimation";
@@ -17,19 +17,18 @@ interface ChatWindowProps {
   contact: Contact;
   messages: Message[];
   onSendMessage: (text: string) => void;
-  onSendFile: (file: File) => void;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
 }
 
-const ChatWindow = ({ contact, messages, onSendMessage, onSendFile, isFullscreen = false, onToggleFullscreen }: ChatWindowProps) => {
+const ChatWindow = ({ contact, messages, onSendMessage, isFullscreen = false, onToggleFullscreen }: ChatWindowProps) => {
   const [inputValue, setInputValue] = useState("");
   const [showTeleport, setShowTeleport] = useState(false);
   const [isIncognito, setIsIncognito] = useState(false);
   const [animatingMessage, setAnimatingMessage] = useState<string | null>(null);
   // Emoji picker removed
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -57,12 +56,7 @@ const ChatWindow = ({ contact, messages, onSendMessage, onSendFile, isFullscreen
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      onSendFile(file);
-    }
-  };
+
 
   const detectMood = (text: string): "happy" | "sad" | "angry" | "excited" | "neutral" => {
     const happyWords = ["happy", "joy", "great", "awesome", "love", "😊", "😄", "🎉"];
@@ -112,9 +106,6 @@ const ChatWindow = ({ contact, messages, onSendMessage, onSendFile, isFullscreen
                 {contact.name}
                 {isIncognito && <span className="text-xs">🔒</span>}
               </h2>
-              <p className="text-sm text-muted-foreground capitalize">
-                {contact.status === "typing" && !isIncognito ? "typing..." : contact.status}
-              </p>
             </div>
           </div>
           
@@ -151,36 +142,17 @@ const ChatWindow = ({ contact, messages, onSendMessage, onSendFile, isFullscreen
               transition={{ delay: index * 0.1 }}
               className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"}`}
             >
-              {message.type === "file" ? (
-                <FileCube
-                  fileName={message.fileName!}
-                  fileSize={message.fileSize!}
-                  sender={message.sender}
-                />
-              ) : (
                 <ChatBubble
                   message={message.text}
                   sender={message.sender}
                   timestamp={message.timestamp}
                   mood={detectMood(message.text)}
                 />
-              )}
             </motion.div>
           ))}
         </AnimatePresence>
         
-        {/* Typing Indicator */}
-        {contact.status === "typing" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-start"
-          >
-            <div className="chat-bubble received p-4">
-              <div className="text-sm text-muted-foreground">typing...</div>
-            </div>
-          </motion.div>
-        )}
+
         
         <div ref={messagesEndRef} />
       </div>
@@ -204,22 +176,7 @@ const ChatWindow = ({ contact, messages, onSendMessage, onSendFile, isFullscreen
         className="p-4 border-t border-border/20 glass-panel z-10 relative"
       >
         <form onSubmit={handleSend} className="flex items-center gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
-          
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            className="hover-glow"
-          >
-            <Paperclip className="w-4 h-4" />
-          </Button>
+          {/* File upload removed */}
           
           {/* Emoji picker removed */}
           
