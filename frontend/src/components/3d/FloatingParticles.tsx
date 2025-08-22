@@ -34,7 +34,7 @@ const FloatingParticles = () => {
     <Points ref={ref} positions={positions} stride={3} frustumCulled={false}>
       <PointMaterial
         transparent
-        color="#D4C2A0"
+        color="#591f0b"
         size={0.05}
         sizeAttenuation={true}
         depthWrite={false}

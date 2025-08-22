@@ -47,7 +47,10 @@ const Landing = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 1 }}
-            className="text-6xl md:text-8xl font-bold mb-6 text-gradient"
+            className="text-6xl md:text-8xl font-bold mb-6 
+           bg-gradient-to-r from-[#9d673a] from-15% 
+           to-[#deac76] to-85% 
+           bg-clip-text text-transparent"
           >
             QuantumChat
           </motion.h1>
@@ -102,7 +105,7 @@ const Landing = () => {
             <Button
               onClick={() => navigate("/login")}
               size="lg"
-              className="glass-button text-lg px-8 py-4 hover-glow"
+              className="glass-button text-lg px-8 py-4 hover-glow bg-[#deac76]"
             >
               Login
             </Button>
