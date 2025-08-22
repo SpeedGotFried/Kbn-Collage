@@ -94,6 +94,11 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
+  .light {
+    /* Light theme uses the default :root variables */
+    /* All variables are already defined in :root above */
+  }
+
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;

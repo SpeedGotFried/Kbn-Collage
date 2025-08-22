@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import QuantumAvatar from "@/components/chat/QuantumAvatar";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ const Settings = () => {
     showPreviews: true
   });
   
-  const [theme, setTheme] = useState("light");
+  const { theme, setTheme } = useTheme();
 
   const avatarOptions = ["🌟", "🌙", "🚀", "🌌", "💫", "⭐", "🔥", "💎", "🦋", "🌈"];
 
@@ -47,11 +48,13 @@ const Settings = () => {
   };
 
   const handleThemeChange = (newTheme: string) => {
-    setTheme(newTheme);
-    toast({
-      title: "Theme Changed",
-      description: `Switched to ${newTheme} theme`
-    });
+    if (newTheme === 'light' || newTheme === 'dark') {
+      setTheme(newTheme as 'light' | 'dark');
+      toast({
+        title: "Theme Changed",
+        description: `Switched to ${newTheme} theme`
+      });
+    }
   };
 
   return (
@@ -208,12 +211,6 @@ const Settings = () => {
                       <div className="flex items-center">
                         <Moon className="w-5 h-5 mr-3" />
                         Dark Mode
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="quantum" className="text-base font-medium py-3">
-                      <div className="flex items-center">
-                        <span className="w-5 h-5 mr-3 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full"></span>
-                        Quantum Glow
                       </div>
                     </SelectItem>
                   </SelectContent>

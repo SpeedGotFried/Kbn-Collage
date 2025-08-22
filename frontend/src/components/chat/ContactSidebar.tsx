@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Plus, Settings, User } from "lucide-react";
+import { Search, Plus, Settings, User, Sun, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Contact } from "@/types/chat";
 import QuantumAvatar from "./QuantumAvatar";
 import FriendProfileModal from "./FriendProfileModal";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface ContactSidebarProps {
   contacts: Contact[];
@@ -22,6 +23,7 @@ const ContactSidebar = ({ contacts, selectedContact, onSelectContact, onAddFrien
   const [showProfile, setShowProfile] = useState(false);
   const [selectedProfileContact, setSelectedProfileContact] = useState<Contact | null>(null);
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -56,6 +58,15 @@ const ContactSidebar = ({ contacts, selectedContact, onSelectContact, onAddFrien
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-bold text-sidebar-foreground">QuantumChat</h1>
           <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              className="hover-glow"
+              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            >
+              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            </Button>
             <Button
               variant="ghost"
               size="sm"
