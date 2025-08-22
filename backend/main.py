@@ -170,6 +170,17 @@ async def profile_qr(user=Depends(get_current_user)):
     return {"user_id": user.user_id, "qr_code": qr}
 
 
+# Current user profile (used by frontend to fetch own 16-digit ID)
+@app.get("/v1/profile/me")
+async def profile_me(user=Depends(get_current_user)):
+    return {
+        "id": user.id,
+        "user_id": user.user_id,
+        "phone_number": user.phone,
+        "created_at": user.created_at,
+    }
+
+
 # Friends endpoints
 class FriendRequestPayload(BaseModel):
     receiver_id: str
