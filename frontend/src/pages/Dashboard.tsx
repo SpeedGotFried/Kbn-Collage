@@ -4,101 +4,105 @@ import ContactSidebar from "@/components/chat/ContactSidebar";
 import ChatWindow from "@/components/chat/ChatWindow";
 import { Contact, Message } from "@/types/chat";
 
-// Mock data
-const mockContacts: Contact[] = [
-  {
-    id: "1",
-    name: "Alex Quantum",
-    phone: "+1234567890",
-    avatar: "🌟",
-    status: "online",
-    lastMessage: "Hey! How's the 3D messaging working?",
-    lastMessageTime: "2 min ago",
-    unreadCount: 2
-  },
-  {
-    id: "2", 
-    name: "Sarah Nebula",
-    phone: "+1234567891",
-    avatar: "🌙",
-    status: "typing",
-    lastMessage: "The file encryption is amazing!",
-    lastMessageTime: "5 min ago",
-    unreadCount: 0
-  },
-  {
-    id: "3",
-    name: "Mike Cosmos",
-    phone: "+1234567892", 
-    avatar: "🚀",
-    status: "offline",
-    lastMessage: "Can't wait to try the teleport messages",
-    lastMessageTime: "1 hour ago",
-    unreadCount: 1
-  },
-  {
-    id: "4",
-    name: "Luna Galaxy",
-    phone: "+1234567893",
-    avatar: "🌌",
-    status: "dnd",
-    lastMessage: "This quantum vault feature is incredible",
-    lastMessageTime: "3 hours ago",
-    unreadCount: 0
-  }
-];
-
-const mockMessages: Record<string, Message[]> = {
-  "1": [
-    {
-      id: "1",
-      text: "Hey! How's the 3D messaging working?",
-      sender: "1",
-      timestamp: new Date(Date.now() - 2 * 60 * 1000),
-      type: "text"
-    },
-    {
-      id: "2", 
-      text: "It's absolutely incredible! The quantum avatars are so cool 🌟",
-      sender: "me",
-      timestamp: new Date(Date.now() - 1 * 60 * 1000),
-      type: "text"
-    }
-  ],
-  "2": [
-    {
-      id: "3",
-      text: "The file encryption is amazing!",
-      sender: "2",
-      timestamp: new Date(Date.now() - 5 * 60 * 1000),
-      type: "text"
-    },
-    {
-      id: "4",
-      text: "I love how the cubes unfold when you decrypt them",
-      sender: "me", 
-      timestamp: new Date(Date.now() - 4 * 60 * 1000),
-      type: "text"
-    },
-    {
-      id: "5",
-      text: "document.pdf",
-      sender: "2",
-      timestamp: new Date(Date.now() - 3 * 60 * 1000),
-      type: "file",
-      fileName: "document.pdf",
-      fileSize: "2.4 MB"
-    }
-  ]
-};
-
 const Dashboard = () => {
-  const [selectedContact, setSelectedContact] = useState<string | null>("1");
-  const [contacts, setContacts] = useState<Contact[]>(mockContacts);
-  const [messages, setMessages] = useState<Record<string, Message[]>>(mockMessages);
+  const [selectedContact, setSelectedContact] = useState<string | null>(null);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(320); // Default width in pixels
   const [isResizing, setIsResizing] = useState(false);
+
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  const mapFriendToContact = (friend: any): Contact => {
+    // Backend returns friend_id (the other user's 16-digit user_id) and created_at
+    return {
+      id: friend.friend_id,
+      name: friend.friend_id,
+      phone: "",
+      avatar: "👤",
+      status: "offline",
+      lastMessage: "",
+      lastMessageTime: "",
+      unreadCount: 0
+    };
+  };
+
+  const fetchContacts = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch("http://localhost:8000/v1/friends/list", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const mapped: Contact[] = (data || []).map(mapFriendToContact);
+      setContacts(mapped);
+      if (!selectedContact && mapped.length > 0) {
+        setSelectedContact(mapped[0].id);
+      }
+    } catch (e) {
+      console.error("Failed to load contacts", e);
+    }
+  };
+
+  const mapBackendMessage = (msg: any, currentUserId: string, friendId: string): Message => {
+    // We don't have decrypted content here; the backend stores encrypted JSON.
+    // For UI placeholder, we can show a generic label until decryption is implemented on client.
+    const sender = msg.sender?.user_id === currentUserId ? "me" : friendId;
+    return {
+      id: String(msg.id),
+      text: "Encrypted message",
+      sender,
+      timestamp: new Date(msg.created_at),
+      type: "text"
+    };
+  };
+
+  const fetchMessagesFor = async (friendId: string) => {
+    if (!token) return;
+    try {
+      const resProfile = await fetch("http://localhost:8000/v1/profile/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!resProfile.ok) return;
+      const me = await resProfile.json();
+      const myUserId: string = me.user_id;
+
+      const res = await fetch(`http://localhost:8000/v1/chat/messages/${friendId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const mapped: Message[] = (data || []).map((m: any) => mapBackendMessage(m, myUserId, friendId));
+      setMessages(prev => ({ ...prev, [friendId]: mapped }));
+    } catch (e) {
+      console.error("Failed to load messages", e);
+    }
+  };
+
+  const sendMessageToBackend = async (friendId: string, text: string) => {
+    if (!token) return;
+    try {
+      const res = await fetch("http://localhost:8000/v1/chat/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ receiver_id: friendId, content: text }),
+      });
+      if (!res.ok) {
+        console.error("Failed to send message");
+        return null;
+      }
+      const data = await res.json();
+      return data;
+    } catch (e) {
+      console.error("Failed to send message", e);
+      return null;
+    }
+  };
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     setIsResizing(true);
@@ -107,12 +111,9 @@ const Dashboard = () => {
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isResizing) return;
-    
     const newWidth = e.clientX;
-    // Set minimum and maximum widths
     const minWidth = 250;
     const maxWidth = window.innerWidth * 0.6; // Max 60% of screen width
-    
     if (newWidth >= minWidth && newWidth <= maxWidth) {
       setSidebarWidth(newWidth);
     }
@@ -143,11 +144,23 @@ const Dashboard = () => {
     };
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
-  const handleSendMessage = (text: string) => {
+  useEffect(() => {
+    fetchContacts();
+  }, []);
+
+  useEffect(() => {
+    if (selectedContact) {
+      fetchMessagesFor(selectedContact);
+    }
+  }, [selectedContact]);
+
+  const handleSendMessage = async (text: string) => {
     if (!selectedContact) return;
+    const backendMsg = await sendMessageToBackend(selectedContact, text);
+    if (!backendMsg) return;
 
     const newMessage: Message = {
-      id: Date.now().toString(),
+      id: String(backendMsg.id || Date.now()),
       text,
       sender: "me",
       timestamp: new Date(),
@@ -159,7 +172,6 @@ const Dashboard = () => {
       [selectedContact]: [...(prev[selectedContact] || []), newMessage]
     }));
 
-    // Update contact's last message
     setContacts(prev => prev.map(contact => 
       contact.id === selectedContact 
         ? { ...contact, lastMessage: text, lastMessageTime: "now" }
@@ -167,23 +179,8 @@ const Dashboard = () => {
     ));
   };
 
-  const handleSendFile = (file: File) => {
-    if (!selectedContact) return;
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text: file.name,
-      sender: "me",
-      timestamp: new Date(),
-      type: "file",
-      fileName: file.name,
-      fileSize: `${(file.size / 1024 / 1024).toFixed(1)} MB`
-    };
-
-    setMessages(prev => ({
-      ...prev,
-      [selectedContact]: [...(prev[selectedContact] || []), newMessage]
-    }));
+  const handleSendFile = (_file: File) => {
+    // File sending pipeline not implemented to backend yet.
   };
 
   const handleAddFriend = (contact: Contact) => {
